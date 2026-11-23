@@ -906,6 +906,8 @@ function itemMetaHtml(item, d) {
   if (isZoneItem(item)) {
     const st = zoneStats(item);
     s += '<br>오늘 <b>' + st.doneZones + '/' + st.zones.length + '</b> 구역 체크';
+    const memoLog = todayLogsFor(item.id).find(l => l.memo);
+    if (memoLog) s += '<br><span style="color:var(--ink-2)">메모 · ' + esc(memoLog.memo) + '</span>';
     return s;
   }
   const sum = detailSummary(d.last && d.last.detail, item);
@@ -992,6 +994,9 @@ function renderZoneCard(item, d) {
       '<div class="item-meta">' + itemMetaHtml(item, d) + '</div>' +
     '</div>';
   const actions = el('div', 'item-actions');
+  const memoBtn = el('button', 'btn-hist', '메모');
+  memoBtn.onclick = () => openMemoSheet(item);
+  actions.appendChild(memoBtn);
   const hist = el('button', 'btn-hist', '이력');
   hist.onclick = () => openHistory(item);
   actions.appendChild(hist);
@@ -1230,6 +1235,45 @@ async function quickComplete(item) {
   if (row) {
     toast(currentWorkerName() + ' · ' + item.title + ' 완료', () => deleteLog(row.id));
   }
+}
+
+/* 오늘 기록에 붙는 짧은 메모 */
+function openMemoSheet(item) {
+  const cells = todayLogsFor(item.id).filter(l => l.detail && l.detail.zones);
+  const cur = todayLogsFor(item.id).find(l => l.memo);
+  const body = el('div', '');
+  const field = el('div', 'field');
+  field.innerHTML = '<label>오늘 메모 (선택)</label>';
+  const ta = el('textarea', 'input');
+  ta.value = cur ? cur.memo : '';
+  ta.placeholder = '예: 광장은 물걸레 2번, 스크린은 청소기만';
+  field.appendChild(ta);
+  body.appendChild(field);
+  body.appendChild(el('div', 'hint', '오늘 기록에 함께 남고, 최근 이력·이력 창에 같이 보입니다.'));
+  const cancel = el('button', 'btn ghost', '닫기');
+  cancel.onclick = closeSheet;
+  const save = el('button', 'btn primary', '메모 저장');
+  save.onclick = async () => {
+    if (!cells.length) { toast('먼저 구역의 청소기 / 물걸레질을 하나 눌러 주세요'); return; }
+    const memo = ta.value.trim();
+    const target = cells[0];
+    const ops = [];
+    todayLogsFor(item.id).forEach(l => {
+      const next = l.id === target.id ? (memo || null) : (memo ? l.memo : null);
+      if ((l.memo || null) !== next) ops.push({ id: l.id, memo: next });
+    });
+    state.logs.forEach(l => { const o = ops.find(x => x.id === l.id); if (o) l.memo = o.memo; });
+    saveCache(); render();
+    if (sb) {
+      for (const o of ops) {
+        const { error } = await sb.from('cleaning_logs').update({ memo: o.memo }).eq('id', o.id);
+        if (error) { toast('메모 저장 실패'); return; }
+      }
+    }
+    closeSheet();
+    toast(memo ? '메모를 저장했습니다' : '메모를 지웠습니다');
+  };
+  openSheet(esc(item.title) + ' 메모', '구역 버튼으로 남긴 오늘 기록에 함께 저장됩니다', body, [cancel, save]);
 }
 
 function openHistory(item) {
