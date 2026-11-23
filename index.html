@@ -127,7 +127,9 @@ input,select,textarea{font-family:inherit;font-size:16px}
   padding:5px 9px;border-radius:9px;background:#fbeceb;border:1px solid #f6dcd8;
 }
 .mini.done{background:var(--mint-50);border-color:#d5e9dd;color:var(--green-700)}
+.mini.part{background:var(--amber-bg);border-color:#f2dfc6;color:var(--amber)}
 .mini .who{font-size:9.5px;font-weight:700;color:var(--ink-3)}
+.mini .prog{font-size:9.5px;font-weight:700;color:var(--ink-3)}
 
 /* due card */
 .due{padding:12px 14px}
@@ -181,6 +183,33 @@ input,select,textarea{font-family:inherit;font-size:16px}
 .btn-hist{font-size:10.5px;font-weight:700;color:var(--ink-3)}
 .item.done-item{opacity:.92}
 
+/* 인라인 구역 × 방식 체크 (바닥청소 등) */
+.zi{margin:0 13px 13px;padding-top:10px;border-top:1px dashed var(--line)}
+.zi-head{display:flex;align-items:center;gap:5px;margin-bottom:7px}
+.zi-prog{flex:1;min-width:0;font-size:11px;font-weight:700;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zi-prog b{color:var(--ink-2);font-weight:800}
+.zi-all{
+  flex:none;font-size:10.5px;font-weight:800;padding:5px 8px;border-radius:8px;
+  background:var(--mint-50);color:var(--green-700);border:1px solid #d8e9df;white-space:nowrap;
+}
+.zi-all:active{background:#dcefe3}
+.zi-all.mop{background:var(--blue-bg);color:var(--blue);border-color:#d3e2f1}
+.zi-row{display:grid;grid-template-columns:minmax(58px,1fr) auto auto;gap:6px;align-items:center;padding:4px 0}
+.zi-name{font-size:12.5px;font-weight:800;line-height:1.2;color:var(--ink);word-break:keep-all}
+.cell{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  min-width:84px;padding:5px 9px;border-radius:10px;background:#f4f7f5;border:1px solid #e4ebe6;
+  color:#85948c;font-size:12px;font-weight:800;line-height:1.15;transition:background .12s,color .12s;
+}
+.cell .who{font-size:8.5px;font-weight:700;color:#abb8b1;height:10px;line-height:10px;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.cell.on{background:var(--green-600);border-color:var(--green-600);color:#fff;box-shadow:0 3px 9px rgba(31,138,87,.24)}
+.cell.on .who{color:rgba(255,255,255,.88)}
+.cell.mop.on{background:var(--blue);border-color:var(--blue);box-shadow:0 3px 9px rgba(44,110,168,.24)}
+.cell:active{transform:scale(.96)}
+.tick.part{background:var(--amber-bg);border-color:#f2dfc6;color:var(--amber)}
+.item.flash{animation:itemflash 1.15s ease}
+@keyframes itemflash{0%,100%{box-shadow:0 2px 12px rgba(16,40,28,.05)}35%{box-shadow:0 0 0 3px rgba(42,169,106,.32)}}
+
 /* recent */
 .recent{margin-top:10px}
 .log{display:flex;gap:10px;padding:10px 13px;border-bottom:1px dashed var(--line);font-size:12.5px}
@@ -216,18 +245,6 @@ input,select,textarea{font-family:inherit;font-size:16px}
 .btn.danger{background:var(--danger-bg);color:var(--danger)}
 .btn:disabled{opacity:.45;box-shadow:none}
 
-.zone{background:#fff;border:1px solid var(--line);border-radius:13px;padding:11px 12px;margin-bottom:8px}
-.zone-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.zone-name{font-size:13px;font-weight:800}
-.zone-btns{display:flex;gap:5px}
-.toggle{
-  font-size:11.5px;font-weight:800;padding:6px 10px;border-radius:9px;
-  background:#f2f5f3;color:var(--ink-3);border:1px solid #e6ebe7;
-}
-.toggle.on{background:var(--green-600);color:#fff;border-color:var(--green-600)}
-.toggle.on.mop{background:var(--blue);border-color:var(--blue)}
-.quick-row{display:flex;gap:6px;margin:0 0 10px}
-.quick{font-size:11px;font-weight:800;padding:7px 10px;border-radius:9px;background:var(--mint-50);color:var(--green-700);border:1px solid #d8e9df}
 .field{margin-bottom:12px}
 .field label{display:block;font-size:11.5px;font-weight:800;color:var(--ink-2);margin-bottom:5px}
 .input{
@@ -464,14 +481,14 @@ function normalizeItem(r) {
   };
 }
 
-async function insertLog(item, detail, memo) {
+async function insertLog(item, detail, memo, extra) {
   const row = {
     id: uid(),
     item_id: item.id,
-    staff_name: currentWorkerName(),
+    staff_name: (extra && extra.staff_name) || currentWorkerName(),
     detail: detail || null,
     memo: memo || null,
-    done_at: new Date().toISOString()
+    done_at: (extra && extra.done_at) || new Date().toISOString()
   };
   // optimistic
   state.logs.unshift(row);
@@ -637,7 +654,7 @@ function catClass(cat) {
 function catCount(cat) {
   const list = activeItems().filter(i => i.category === cat);
   if (cat === '매일') {
-    const done = list.filter(i => todayLogFor(i.id)).length;
+    const done = list.filter(i => isDoneToday(i)).length;
     return done + '/' + list.length;
   }
   const need = list.filter(i => {
@@ -665,6 +682,60 @@ function detailSummary(detail, item) {
   if (detail.note) return detail.note;
   if (detail.shutdown) return '마감 완료';
   return '';
+}
+
+/* ---------- 구역 × 방식 인라인 체크 ---------- */
+function isZoneItem(item) {
+  return !!(item && item.options_json && Array.isArray(item.options_json.zones) && item.options_json.zones.length);
+}
+function zoneLabels(item) {
+  return (item.options_json.zones || [])
+    .map(z => typeof z === 'string' ? z : (z && z.label))
+    .filter(Boolean);
+}
+function methodLabels(item) {
+  const ms = ((item.options_json && item.options_json.methods) || []).filter(Boolean);
+  return ms.length ? ms : ['청소기', '물걸레질'];
+}
+function cellKey(z, m) { return z + '::' + m; }
+function todayLogsFor(itemId) {
+  const t = todayKey();
+  return state.logs.filter(l => l.item_id === itemId && kstKey(l.done_at) === t);
+}
+/* 오늘 기록(여러 건 · 예전 구역시트 기록 포함)에서 구역·방식별 완료 상태를 모음 */
+function todayCells(item) {
+  const out = {};
+  todayLogsFor(item.id).forEach(l => {
+    const zs = l.detail && l.detail.zones;
+    if (!zs || typeof zs !== 'object') return;
+    Object.keys(zs).forEach(z => {
+      const ms = Array.isArray(zs[z]) ? zs[z] : [];
+      ms.forEach(m => {
+        const k = cellKey(z, m);
+        if (!out[k]) out[k] = { by: l.staff_name, at: l.done_at, rows: [] };
+        out[k].rows.push(l.id);
+      });
+    });
+  });
+  return out;
+}
+function zoneStats(item) {
+  const zones = zoneLabels(item);
+  const methods = methodLabels(item).slice(0, 2);
+  const cells = todayCells(item);
+  const perMethod = methods.map(m => ({
+    m, n: zones.filter(z => cells[cellKey(z, m)]).length, total: zones.length
+  }));
+  const doneZones = zones.filter(z => methods.some(m => cells[cellKey(z, m)])).length;
+  return { zones, methods, cells, perMethod, doneZones, complete: zones.length > 0 && doneZones === zones.length };
+}
+function isDoneToday(item) {
+  if (isZoneItem(item)) return zoneStats(item).complete;
+  return !!todayLogFor(item.id);
+}
+function shortName(name) {
+  const s = String(name || '').replace(/\s*(프로|매니저)\s*$/, '').trim();
+  return s || String(name || '');
 }
 
 /* ---------- render ---------- */
@@ -718,7 +789,7 @@ function renderStaffChips() {
 function renderToday() {
   const card = $('#todayCard');
   const daily = activeItems().filter(i => (i.interval_days || 1) === 1);
-  const done = daily.filter(i => todayLogFor(i.id));
+  const done = daily.filter(i => isDoneToday(i));
   const pct = daily.length ? Math.round(done.length / daily.length * 100) : 0;
   const left = daily.length - done.length;
   card.innerHTML =
@@ -732,6 +803,17 @@ function renderToday() {
     '<div class="bar"><i style="width:' + pct + '%"></i></div>';
   const list = el('div', 'today-list');
   daily.forEach(i => {
+    if (isZoneItem(i)) {
+      const st = zoneStats(i);
+      const partial = !st.complete && st.doneZones > 0;
+      const chip = el('button', 'mini' + (st.complete ? ' done' : '') + (partial ? ' part' : ''),
+        (st.complete ? '✓ ' : partial ? '◐ ' : '○ ') + esc(i.title) +
+        '<span class="prog">' + st.perMethod.map(p => esc(p.m) + ' ' + p.n + '/' + p.total).join(' · ') + '</span>');
+      chip.title = '아래 ' + i.title + ' 카드로 이동';
+      chip.onclick = () => scrollToItem(i);
+      list.appendChild(chip);
+      return;
+    }
     const log = todayLogFor(i.id);
     const chip = el('button', 'mini' + (log ? ' done' : ''),
       (log ? '✓ ' : '○ ') + esc(i.title) + (log ? '<span class="who">' + esc(log.staff_name) + '</span>' : ''));
@@ -739,6 +821,24 @@ function renderToday() {
     list.appendChild(chip);
   });
   card.appendChild(list);
+}
+
+/* 오늘 요약 칩 → 해당 항목 카드로 부드럽게 이동 */
+function scrollToItem(item) {
+  const go = () => {
+    const node = document.getElementById('item-' + item.id);
+    if (!node) return false;
+    node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    node.classList.remove('flash');
+    void node.offsetWidth;
+    node.classList.add('flash');
+    clearTimeout(node._flashT);
+    node._flashT = setTimeout(() => node.classList.remove('flash'), 1300);
+    return true;
+  };
+  if (go()) return;
+  if (state.tab !== '전체') { state.tab = '전체'; render(); }
+  setTimeout(go, 90);
 }
 
 function renderDue() {
@@ -786,24 +886,47 @@ function renderTabs() {
 }
 
 function itemMetaHtml(item, d) {
+  let s;
   if (!d.last) {
-    return item.interval_days > 1
+    s = item.interval_days > 1
       ? '첫 기록 없음 · 주기 ' + item.interval_days + '일'
       : '오늘 아직 안 함';
-  }
-  const isToday = d.lastKey === todayKey();
-  let s = '마지막 <b>' + fmtDate(d.lastKey) + '</b> · <b>' + esc(d.last.staff_name) + '</b>';
-  if (item.interval_days > 1) {
-    s += ' · 다음 <b>' + fmtDate(d.next) + '</b>';
-  } else if (isToday) {
-    s += ' · 오늘 <b>' + kstHM(d.last.done_at) + '</b> 완료';
   } else {
-    const gap = diffDays(d.lastKey, todayKey());
-    s += ' · ' + (gap === 1 ? '어제' : gap + '일 전');
+    const isToday = d.lastKey === todayKey();
+    s = '마지막 <b>' + fmtDate(d.lastKey) + '</b> · <b>' + esc(shortName(d.last.staff_name)) + '</b>';
+    if (item.interval_days > 1) {
+      s += ' · 다음 <b>' + fmtDate(d.next) + '</b>';
+    } else if (isToday) {
+      s += ' · 오늘 <b>' + kstHM(d.last.done_at) + '</b> 기록';
+    } else {
+      const gap = diffDays(d.lastKey, todayKey());
+      s += ' · ' + (gap === 1 ? '어제' : gap + '일 전');
+    }
   }
-  const sum = detailSummary(d.last.detail, item);
+  if (isZoneItem(item)) {
+    const st = zoneStats(item);
+    s += '<br>오늘 <b>' + st.doneZones + '/' + st.zones.length + '</b> 구역 체크';
+    return s;
+  }
+  const sum = detailSummary(d.last && d.last.detail, item);
   if (sum) s += '<br>' + esc(sum);
   return s;
+}
+
+function tickFor(item, d) {
+  if (isZoneItem(item)) {
+    const st = zoneStats(item);
+    if (st.complete) return { cls: 'tick done', txt: '✓' };
+    if (st.doneZones > 0) return { cls: 'tick part', txt: '◐' };
+    return { cls: 'tick over', txt: '!' };
+  }
+  if (item.interval_days === 1) {
+    return todayLogFor(item.id) ? { cls: 'tick done', txt: '✓' } : { cls: 'tick over', txt: '!' };
+  }
+  if (d.state === 'overdue') return { cls: 'tick over', txt: '!' };
+  if (d.state === 'soon') return { cls: 'tick', txt: '·' };
+  if (d.state === 'ok') return { cls: 'tick done', txt: '✓' };
+  return { cls: 'tick', txt: '○' };
 }
 
 function renderList() {
@@ -817,32 +940,25 @@ function renderList() {
   }
   items.forEach(item => {
     const d = dueInfo(item);
+    if (isZoneItem(item)) { list.appendChild(renderZoneCard(item, d)); return; }
+
     const doneToday = item.interval_days === 1 && todayLogFor(item.id);
     const card = el('div', 'item' + (doneToday ? ' done-item' : ''));
-    const hasZones = !!(item.options_json && item.options_json.zones);
-
-    let tickCls = 'tick';
-    let tickTxt = '○';
-    if (item.interval_days === 1) {
-      if (doneToday) { tickCls = 'tick done'; tickTxt = '✓'; }
-      else { tickCls = 'tick over'; tickTxt = '!'; }
-    } else if (d.state === 'overdue') { tickCls = 'tick over'; tickTxt = '!'; }
-    else if (d.state === 'soon') { tickCls = 'tick'; tickTxt = '·'; }
-    else if (d.state === 'ok') { tickCls = 'tick done'; tickTxt = '✓'; }
+    card.id = 'item-' + item.id;
+    const tick = tickFor(item, d);
 
     const main = el('div', 'item-main');
     main.innerHTML =
-      '<div class="' + tickCls + '">' + tickTxt + '</div>' +
+      '<div class="' + tick.cls + '">' + tick.txt + '</div>' +
       '<div class="item-copy">' +
         '<div class="item-title">' + esc(item.title) +
           '<span class="cat ' + catClass(item.category) + '">' + esc(item.category) + '</span>' +
-          (hasZones ? '<span class="cat">구역별</span>' : '') +
         '</div>' +
         '<div class="item-meta">' + itemMetaHtml(item, d) + '</div>' +
       '</div>';
 
     const actions = el('div', 'item-actions');
-    const btn = el('button', 'btn-done' + (doneToday ? ' soft' : ''), doneToday ? '추가 기록' : (hasZones ? '구역 체크' : '완료'));
+    const btn = el('button', 'btn-done' + (doneToday ? ' soft' : ''), doneToday ? '추가 기록' : '완료');
     btn.onclick = () => completeItem(item);
     actions.appendChild(btn);
     if (item.interval_days > 1) {
@@ -859,27 +975,106 @@ function renderList() {
   });
 }
 
+/* 구역별 항목(바닥청소 등) — 카드 안에서 구역 × 방식 바로 토글 */
+function renderZoneCard(item, d) {
+  const st = zoneStats(item);
+  const tick = tickFor(item, d);
+  const card = el('div', 'item zone-item' + (st.complete ? ' done-item' : ''));
+  card.id = 'item-' + item.id;
+
+  const main = el('div', 'item-main');
+  main.innerHTML =
+    '<div class="' + tick.cls + '">' + tick.txt + '</div>' +
+    '<div class="item-copy">' +
+      '<div class="item-title">' + esc(item.title) +
+        '<span class="cat ' + catClass(item.category) + '">' + esc(item.category) + '</span>' +
+      '</div>' +
+      '<div class="item-meta">' + itemMetaHtml(item, d) + '</div>' +
+    '</div>';
+  const actions = el('div', 'item-actions');
+  const hist = el('button', 'btn-hist', '이력');
+  hist.onclick = () => openHistory(item);
+  actions.appendChild(hist);
+  main.appendChild(actions);
+  card.appendChild(main);
+
+  const zi = el('div', 'zi');
+  const head = el('div', 'zi-head');
+  head.appendChild(el('div', 'zi-prog',
+    st.perMethod.map(p => '<b>' + esc(p.m) + '</b> ' + p.n + '/' + p.total).join(' · ')));
+  st.methods.forEach((m, idx) => {
+    const b = el('button', 'zi-all' + (idx === 1 ? ' mop' : ''), '+ ' + esc(m) + ' 전체');
+    b.onclick = () => fillMethod(item, m);
+    head.appendChild(b);
+  });
+  zi.appendChild(head);
+
+  st.zones.forEach(z => {
+    const row = el('div', 'zi-row');
+    row.appendChild(el('div', 'zi-name', esc(z)));
+    st.methods.forEach((m, idx) => {
+      const c = st.cells[cellKey(z, m)];
+      const b = el('button', 'cell' + (idx === 1 ? ' mop' : '') + (c ? ' on' : ''),
+        (c ? '✓ ' : '') + esc(m) +
+        '<span class="who">' + (c ? esc(shortName(c.by)) + ' · ' + kstHM(c.at) : '&nbsp;') + '</span>');
+      b.setAttribute('aria-pressed', c ? 'true' : 'false');
+      b.onclick = () => toggleCell(item, z, m);
+      row.appendChild(b);
+    });
+    zi.appendChild(row);
+  });
+  card.appendChild(zi);
+  return card;
+}
+
+/* 같은 항목· 같은 날 기록은 한 줄로 묶어서 보여 줍니다 (바닥청소 구역 토글이 여러 건이라서) */
+function recentGroups(limit) {
+  const groups = [];
+  const byKey = {};
+  state.logs.forEach(l => {
+    const key = l.item_id + '|' + kstKey(l.done_at);
+    let g = byKey[key];
+    if (!g) {
+      g = byKey[key] = { key, item_id: l.item_id, at: l.done_at, staff: [], zones: {}, memo: l.memo || null, hasDetail: false };
+      groups.push(g);
+    }
+    if (g.staff.indexOf(l.staff_name) < 0) g.staff.push(l.staff_name);
+    const zs = l.detail && l.detail.zones;
+    if (zs && typeof zs === 'object') {
+      g.hasDetail = true;
+      Object.keys(zs).forEach(z => {
+        const cur = g.zones[z] || (g.zones[z] = []);
+        (Array.isArray(zs[z]) ? zs[z] : []).forEach(m => { if (cur.indexOf(m) < 0) cur.push(m); });
+      });
+    }
+    if (l.memo && !g.memo) g.memo = l.memo;
+    if (new Date(l.done_at) > new Date(g.at)) g.at = l.done_at;
+  });
+  return groups.slice(0, limit);
+}
+
 function renderRecent() {
   const wrap = $('#recent');
   wrap.innerHTML = '';
-  const logs = state.logs.slice(0, 8);
-  if (!logs.length) {
+  const groups = recentGroups(8);
+  if (!groups.length) {
     wrap.innerHTML = '<div class="empty">아직 기록이 없습니다.<br>첫 청소를 완료하면 여기에 쌓입니다.</div>';
     return;
   }
-  logs.forEach(l => {
-    const item = itemById(l.item_id);
+  groups.forEach(g => {
+    const item = itemById(g.item_id);
     const row = el('div', 'log');
-    const base = (l.staff_name || '').replace(/\s*(프로|매니저)\s*$/, '').trim();
-    const initial = (base || l.staff_name || '?').trim().slice(0, 1) || '?';
-    const sum = detailSummary(l.detail, item);
+    const names = g.staff.map(shortName);
+    const who = names.length > 2 ? names.slice(0, 2).join('·') + ' 외 ' + (names.length - 2) + '명' : names.join('·');
+    const initial = (names[0] || '?').trim().slice(0, 1) || '?';
+    const sum = g.hasDetail ? detailSummary({ zones: g.zones }, item) : '';
     row.innerHTML =
       '<div class="log-av">' + esc(initial) + '</div>' +
       '<div class="log-body">' +
         '<div class="log-t">' + esc(item ? item.title : '(삭제된 항목)') + '</div>' +
-        '<div class="log-d">' + esc(l.staff_name) + (sum ? ' · ' + esc(sum) : '') + (l.memo ? ' · ' + esc(l.memo) : '') + '</div>' +
+        '<div class="log-d">' + esc(who || '') + (sum ? ' · ' + esc(sum) : '') + (g.memo ? ' · ' + esc(g.memo) : '') + '</div>' +
       '</div>' +
-      '<div class="log-time">' + esc(relTime(l.done_at)) + '</div>';
+      '<div class="log-time">' + esc(relTime(g.at)) + '</div>';
     row.onclick = () => item && openHistory(item);
     wrap.appendChild(row);
   });
@@ -938,18 +1133,92 @@ function closeSheet() {
 $('#backdrop').onclick = closeSheet;
 
 /* ---------- complete flow ---------- */
+function needWorker() {
+  toast('먼저 위에서 "지금 체크하는 사람"을 선택해 주세요');
+  document.querySelector('.chips-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 function completeItem(item) {
-  if (!state.worker) {
-    toast('먼저 위에서 "지금 체크하는 사람"을 선택해 주세요');
-    document.querySelector('.chips-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    return;
+  if (isZoneItem(item)) { scrollToItem(item); return; }
+  if (!state.worker) { needWorker(); return; }
+  quickComplete(item);
+}
+
+/* ---------- 구역 × 방식 원터치 토글 ---------- */
+async function toggleCell(item, zone, method) {
+  if (!state.worker) { needWorker(); return; }
+  const cells = todayCells(item);
+  const key = cellKey(zone, method);
+  const had = cells[key];
+  if (had) await clearCell(item, zone, method, had);
+  else await markCell(item, zone, method);
+}
+
+async function markCell(item, zone, method, extra) {
+  state.pending++; renderStatus();
+  const row = await insertLog(item, { zones: { [zone]: [method] } }, null, extra);
+  state.pending--; renderStatus();
+  if (row) {
+    toast(shortName(row.staff_name) + ' · ' + zone + ' ' + method + ' 기록', () => deleteLog(row.id));
   }
-  const opts = item.options_json || {};
-  if (opts.zones && opts.zones.length) {
-    openFloorSheet(item);
-  } else {
-    quickComplete(item);
+  return row;
+}
+
+/* 누른 구역·방식을 해제 — 오늘 기록에서 해당 칸만 빼고, 비면 기록을 지웁니다 */
+async function clearCell(item, zone, method, cell) {
+  const t = todayKey();
+  const affected = state.logs.filter(l => l.item_id === item.id && kstKey(l.done_at) === t
+    && l.detail && l.detail.zones && Array.isArray(l.detail.zones[zone])
+    && l.detail.zones[zone].indexOf(method) >= 0);
+  const updates = [];
+  const deletes = [];
+  affected.forEach(l => {
+    const zs = {};
+    Object.keys(l.detail.zones).forEach(z => {
+      const ms = (Array.isArray(l.detail.zones[z]) ? l.detail.zones[z] : [])
+        .filter(m => !(z === zone && m === method));
+      if (ms.length) zs[z] = ms;
+    });
+    if (Object.keys(zs).length) updates.push({ id: l.id, detail: Object.assign({}, l.detail, { zones: zs }) });
+    else deletes.push(l.id);
+  });
+  /* optimistic */
+  state.logs = state.logs
+    .map(l => { const u = updates.find(x => x.id === l.id); return u ? Object.assign({}, l, { detail: u.detail }) : l; })
+    .filter(l => deletes.indexOf(l.id) < 0);
+  saveCache();
+  render();
+  if (sb) {
+    for (const u of updates) {
+      const { error } = await sb.from('cleaning_logs').update({ detail: u.detail }).eq('id', u.id);
+      if (error) console.warn('clear cell update failed', error);
+    }
+    for (const id of deletes) {
+      const { error } = await sb.from('cleaning_logs').delete().eq('id', id);
+      if (error) console.warn('clear cell delete failed', error);
+    }
   }
+  const back = cell && cell.by ? { staff_name: cell.by, done_at: cell.at } : null;
+  toast(zone + ' ' + method + ' 해제', () => markCell(item, zone, method, back));
+}
+
+/* 전체 버튼 — 아직 안 된 구역만 채웁니다(다른 사람 기록은 지우지 않음) */
+async function fillMethod(item, method) {
+  if (!state.worker) { needWorker(); return; }
+  const st = zoneStats(item);
+  const missing = st.zones.filter(z => !st.cells[cellKey(z, method)]);
+  if (!missing.length) { toast('이미 ' + method + ' 모두 기록돼 있습니다'); return; }
+  const created = [];
+  state.pending++; renderStatus();
+  for (const z of missing) {
+    const row = await insertLog(item, { zones: { [z]: [method] } }, null);
+    if (row) created.push(row.id);
+  }
+  state.pending--; renderStatus();
+  if (!created.length) return;
+  toast(shortName(currentWorkerName()) + ' · ' + method + ' ' + created.length + '곳 기록', async () => {
+    for (const id of created) await deleteLog(id);
+  });
 }
 
 async function quickComplete(item) {
@@ -961,92 +1230,6 @@ async function quickComplete(item) {
   if (row) {
     toast(currentWorkerName() + ' · ' + item.title + ' 완료', () => deleteLog(row.id));
   }
-}
-
-function openFloorSheet(item) {
-  const opts = item.options_json || {};
-  const zones = (opts.zones || []).map(z => typeof z === 'string' ? z : z.label);
-  const methods = opts.methods && opts.methods.length ? opts.methods : ['청소기', '물걸레질'];
-  const sel = {};
-  zones.forEach(z => { sel[z] = []; });
-
-  const body = el('div', '');
-  const quick = el('div', 'quick-row');
-  const q1 = el('button', 'quick', '모두 ' + methods[0]);
-  const q2 = el('button', 'quick', '모두 ' + (methods[1] || methods[0]));
-  const q0 = el('button', 'quick', '전체 해제');
-  quick.appendChild(q1); quick.appendChild(q2); quick.appendChild(q0);
-  body.appendChild(quick);
-
-  const zoneNodes = [];
-  zones.forEach(z => {
-    const box = el('div', 'zone');
-    const top = el('div', 'zone-top');
-    top.appendChild(el('div', 'zone-name', esc(z)));
-    const btns = el('div', 'zone-btns');
-    methods.slice(0, 2).forEach((m, idx) => {
-      const b = el('button', 'toggle' + (idx === 1 ? ' mop' : ''), esc(m));
-      b.onclick = () => {
-        const arr = sel[z];
-        const i = arr.indexOf(m);
-        if (i >= 0) arr.splice(i, 1); else arr.push(m);
-        b.classList.toggle('on');
-      };
-      btns.appendChild(b);
-      if (!b._btns) b._btns = [];
-    });
-    top.appendChild(btns);
-    box.appendChild(top);
-    body.appendChild(box);
-    zoneNodes.push({ zone: z, btns: [...btns.children], sel });
-  });
-
-  q1.onclick = () => zoneNodes.forEach(zn => { sel[zn.zone] = [methods[0]]; syncZone(zn); });
-  q2.onclick = () => zoneNodes.forEach(zn => { sel[zn.zone] = [methods[1] || methods[0]]; syncZone(zn); });
-  q0.onclick = () => zoneNodes.forEach(zn => { sel[zn.zone] = []; syncZone(zn); });
-
-  function syncZone(zn) {
-    zn.btns.forEach(b => {
-      const label = b.textContent;
-      b.classList.toggle('on', (sel[zn.zone] || []).indexOf(label) >= 0);
-    });
-  }
-
-  const memoField = el('div', 'field');
-  memoField.innerHTML = '<label>메모 (선택)</label>';
-  const memo = el('textarea', 'input');
-  memo.placeholder = '예: 스크린쪽 물걸레 2회, 광장 청소기만';
-  memoField.appendChild(memo);
-  body.appendChild(memoField);
-  body.appendChild(el('div', 'hint', '구역마다 ' + methods.join(' / ') + ' 중 실제로 한 것을 눌러 주세요. 선택한 구역만 기록됩니다.'));
-
-  const cancel = el('button', 'btn ghost', '닫기');
-  cancel.onclick = closeSheet;
-  const save = el('button', 'btn primary', '완료 기록');
-  save.onclick = async () => {
-    const picked = {};
-    Object.keys(sel).forEach(z => { if (sel[z].length) picked[z] = sel[z].slice(); });
-    if (!Object.keys(picked).length) { toast('구역을 하나 이상 선택해 주세요'); return; }
-    const d = dueInfo(item);
-    const detail = { zones: picked };
-    if (item.options_json && item.options_json.shutdown) detail.shutdown = true;
-    save.disabled = true; save.textContent = '저장 중…';
-    state.pending++; renderStatus();
-    const row = await insertLog(item, detail, memo.value.trim() || null);
-    state.pending--; renderStatus();
-    if (row) {
-      closeSheet();
-      const summary = Object.keys(picked).map(z => z).join(', ');
-      toast(currentWorkerName() + ' · 바닥청소 완료 (' + summary + ')', () => deleteLog(row.id));
-    } else {
-      save.disabled = false; save.textContent = '완료 기록';
-    }
-  };
-  const foot = [cancel, save];
-  const last = lastLogFor(item.id);
-  openSheet(esc(item.title),
-    state.worker ? esc(currentWorkerName()) + ' · ' + (last ? '마지막 ' + fmtDate(kstKey(last.done_at)) : '첫 기록') : '체크하는 사람을 먼저 선택해 주세요',
-    body, foot);
 }
 
 function openHistory(item) {
@@ -1076,7 +1259,12 @@ function openHistory(item) {
       body.appendChild(row);
     });
   }
-  const foot = [(() => { const b = el('button', 'btn primary', '완료 기록하기'); b.onclick = () => { closeSheet(); completeItem(item); }; return b; })()];
+  const foot = [(() => {
+    const zone = isZoneItem(item);
+    const b = el('button', 'btn primary', zone ? '카드에서 구역 체크하기' : '완료 기록하기');
+    b.onclick = () => { closeSheet(); if (zone) scrollToItem(item); else completeItem(item); };
+    return b;
+  })()];
   openSheet(esc(item.title) + ' 이력', '마지막·누가·언제까지 확인', body, foot);
 }
 
