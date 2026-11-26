@@ -180,6 +180,8 @@ input,select,textarea{font-family:inherit;font-size:16px}
 }
 .btn-done:active{transform:translateY(1px)}
 .btn-done.soft{background:var(--mint-50);color:var(--green-700);box-shadow:none;border:1px solid #d8e9df}
+.btn-done.undo{background:#fff;color:var(--danger);box-shadow:none;border:1px solid #efd3ce}
+.btn-done.undo:active{background:var(--danger-bg)}
 .btn-hist{font-size:10.5px;font-weight:700;color:var(--ink-3)}
 .item.done-item{opacity:.92}
 
@@ -193,6 +195,8 @@ input,select,textarea{font-family:inherit;font-size:16px}
   background:var(--mint-50);color:var(--green-700);border:1px solid #d8e9df;white-space:nowrap;
 }
 .zi-all:active{background:#dcefe3}
+.zi-all.undo{background:#fff;color:var(--danger);border-color:#efd3ce}
+.zi-all.undo:active{background:var(--danger-bg)}
 .zi-all.mop{background:var(--blue-bg);color:var(--blue);border-color:#d3e2f1}
 .zi-row{display:grid;grid-template-columns:minmax(58px,1fr) auto auto;gap:6px;align-items:center;padding:4px 0}
 .zi-name{font-size:12.5px;font-weight:800;line-height:1.2;color:var(--ink);word-break:keep-all}
@@ -817,7 +821,7 @@ function renderToday() {
     const log = todayLogFor(i.id);
     const chip = el('button', 'mini' + (log ? ' done' : ''),
       (log ? '✓ ' : '○ ') + esc(i.title) + (log ? '<span class="who">' + esc(log.staff_name) + '</span>' : ''));
-    chip.onclick = () => { if (!log) completeItem(i); };
+    chip.onclick = () => { if (log) scrollToItem(i); else completeItem(i); };
     list.appendChild(chip);
   });
   card.appendChild(list);
@@ -960,8 +964,10 @@ function renderList() {
       '</div>';
 
     const actions = el('div', 'item-actions');
-    const btn = el('button', 'btn-done' + (doneToday ? ' soft' : ''), doneToday ? '추가 기록' : '완료');
-    btn.onclick = () => completeItem(item);
+    /* 오늘 기록이 있으면 같은 버튼을 다시 누를 때 그 기록을 지워 완료를 취소합니다 */
+    const todayLog = todayLogFor(item.id);
+    const btn = el('button', 'btn-done' + (todayLog ? ' undo' : ''), todayLog ? '↺ 완료 취소' : '완료');
+    btn.onclick = () => { if (todayLog) undoItem(item); else completeItem(item); };
     actions.appendChild(btn);
     if (item.interval_days > 1) {
       const chipWrap = el('span', '', dueChip(d));
@@ -1008,7 +1014,10 @@ function renderZoneCard(item, d) {
   head.appendChild(el('div', 'zi-prog',
     st.perMethod.map(p => '<b>' + esc(p.m) + '</b> ' + p.n + '/' + p.total).join(' · ')));
   st.methods.forEach((m, idx) => {
-    const b = el('button', 'zi-all' + (idx === 1 ? ' mop' : ''), '+ ' + esc(m) + ' 전체');
+    const p = st.perMethod.find(x => x.m === m);
+    const allDone = !!p && p.total > 0 && p.n === p.total;
+    const b = el('button', 'zi-all' + (idx === 1 ? ' mop' : '') + (allDone ? ' undo' : ''),
+      (allDone ? '↺ ' : '+ ') + esc(m) + ' 전체');
     b.onclick = () => fillMethod(item, m);
     head.appendChild(b);
   });
@@ -1154,8 +1163,7 @@ async function toggleCell(item, zone, method) {
   if (!state.worker) { needWorker(); return; }
   const cells = todayCells(item);
   const key = cellKey(zone, method);
-  const had = cells[key];
-  if (had) await clearCell(item, zone, method, had);
+  if (cells[key]) await clearCell(item, zone, method);
   else await markCell(item, zone, method);
 }
 
@@ -1169,33 +1177,63 @@ async function markCell(item, zone, method, extra) {
   return row;
 }
 
-/* 누른 구역·방식을 해제 — 오늘 기록에서 해당 칸만 빼고, 비면 기록을 지웁니다 */
-async function clearCell(item, zone, method, cell) {
+/* 누른 구역·방식 한 칸 해제 */
+async function clearCell(item, zone, method) {
+  const snapshot = await clearCells(item, [{ zone, method }]);
+  if (!snapshot) return;
+  toast(zone + ' ' + method + ' 해제 · 실행취소', () => restoreLogs(snapshot));
+}
+
+/* 방식 전체 해제 (전체 버튼을 다시 누를 때) */
+async function clearMethod(item, method) {
+  const st = zoneStats(item);
+  const pairs = st.zones.filter(z => st.cells[cellKey(z, method)]).map(z => ({ zone: z, method }));
+  if (!pairs.length) { toast(method + ' 기록이 없습니다'); return; }
+  const snapshot = await clearCells(item, pairs);
+  if (!snapshot) return;
+  toast(method + ' ' + pairs.length + '곳 해제 · 실행취소', () => restoreLogs(snapshot));
+}
+
+/* 오늘 기록에서 해당 구역·방식 칸들만 빼고, 남는 칸이 없으면 그 기록을 지웁니다.
+   되살리기(실행취소)용으로 지우기 전 기록 스냅샷을 돌려줍니다. */
+async function clearCells(item, pairs) {
   const t = todayKey();
+  const isTarget = (z, m) => pairs.some(p => p.zone === z && p.method === m);
   const affected = state.logs.filter(l => l.item_id === item.id && kstKey(l.done_at) === t
-    && l.detail && l.detail.zones && Array.isArray(l.detail.zones[zone])
-    && l.detail.zones[zone].indexOf(method) >= 0);
+    && l.detail && l.detail.zones && typeof l.detail.zones === 'object'
+    && Object.keys(l.detail.zones).some(z => Array.isArray(l.detail.zones[z]) && l.detail.zones[z].some(m => isTarget(z, m))));
+  if (!affected.length) return null;
+  const snapshot = affected.map(l => JSON.parse(JSON.stringify(l)));
   const updates = [];
   const deletes = [];
   affected.forEach(l => {
     const zs = {};
     Object.keys(l.detail.zones).forEach(z => {
-      const ms = (Array.isArray(l.detail.zones[z]) ? l.detail.zones[z] : [])
-        .filter(m => !(z === zone && m === method));
+      const ms = (Array.isArray(l.detail.zones[z]) ? l.detail.zones[z] : []).filter(m => !isTarget(z, m));
       if (ms.length) zs[z] = ms;
     });
-    if (Object.keys(zs).length) updates.push({ id: l.id, detail: Object.assign({}, l.detail, { zones: zs }) });
+    if (Object.keys(zs).length) updates.push({ id: l.id, patch: { detail: Object.assign({}, l.detail, { zones: zs }) } });
     else deletes.push(l.id);
   });
+  /* 지워지는 기록에 붙은 메모는 남는 오늘 기록으로 옮겨 둡니다 */
+  const keepMemo = affected.filter(l => l.memo && deletes.indexOf(l.id) >= 0).map(l => l.memo)[0];
+  if (keepMemo) {
+    let holder = updates.find(u => { const cur = state.logs.find(l => l.id === u.id); return cur && !cur.memo; });
+    if (!holder) {
+      const other = todayLogsFor(item.id).find(l => deletes.indexOf(l.id) < 0 && !l.memo && !updates.some(u => u.id === l.id));
+      if (other) { holder = { id: other.id, patch: {} }; updates.push(holder); }
+    }
+    if (holder) holder.patch = Object.assign({}, holder.patch, { memo: keepMemo });
+  }
   /* optimistic */
   state.logs = state.logs
-    .map(l => { const u = updates.find(x => x.id === l.id); return u ? Object.assign({}, l, { detail: u.detail }) : l; })
+    .map(l => { const u = updates.find(x => x.id === l.id); return u ? Object.assign({}, l, u.patch) : l; })
     .filter(l => deletes.indexOf(l.id) < 0);
   saveCache();
   render();
   if (sb) {
     for (const u of updates) {
-      const { error } = await sb.from('cleaning_logs').update({ detail: u.detail }).eq('id', u.id);
+      const { error } = await sb.from('cleaning_logs').update(u.patch).eq('id', u.id);
       if (error) console.warn('clear cell update failed', error);
     }
     for (const id of deletes) {
@@ -1203,8 +1241,51 @@ async function clearCell(item, zone, method, cell) {
       if (error) console.warn('clear cell delete failed', error);
     }
   }
-  const back = cell && cell.by ? { staff_name: cell.by, done_at: cell.at } : null;
-  toast(zone + ' ' + method + ' 해제', () => markCell(item, zone, method, back));
+  return snapshot;
+}
+
+/* 실행취소 — 지우기 전 기록을 그대로 되살립니다 (있던 행은 갱신, 지운 행은 다시 넣기) */
+async function restoreLogs(rows) {
+  if (!rows || !rows.length) return;
+  const ids = rows.map(r => r.id);
+  state.logs = state.logs.filter(l => ids.indexOf(l.id) < 0)
+    .concat(rows.map(r => JSON.parse(JSON.stringify(r))));
+  pendingLogs = pendingLogs.filter(l => ids.indexOf(l.id) < 0);
+  state.logs.sort((a, b) => new Date(b.done_at) - new Date(a.done_at));
+  savePending();
+  saveCache();
+  render();
+  if (sb) {
+    const { error } = await sb.from('cleaning_logs').upsert(rows, { onConflict: 'id' });
+    if (error) { console.warn('restore failed', error); toast('되살리기 실패 · 잠시 후 다시 시도해 주세요'); refresh(); return; }
+  }
+  toast('완료 기록을 되살렸습니다');
+}
+
+/* 일반 항목 — 오늘 기록을 지워 완료를 취소합니다 (실행취소로 복구) */
+async function undoItem(item) {
+  const rows = todayLogsFor(item.id);
+  if (!rows.length) { toast('오늘 취소할 기록이 없습니다'); return; }
+  const snapshot = rows.map(l => JSON.parse(JSON.stringify(l)));
+  const ids = snapshot.map(r => r.id);
+  state.logs = state.logs.filter(l => ids.indexOf(l.id) < 0);
+  pendingLogs = pendingLogs.filter(l => ids.indexOf(l.id) < 0);
+  savePending();
+  saveCache();
+  render();
+  if (sb) {
+    for (const id of ids) {
+      const { error } = await sb.from('cleaning_logs').delete().eq('id', id);
+      if (error) {
+        console.warn('undo delete failed', error);
+        toast('완료 취소 실패 · 잠시 후 다시 시도해 주세요');
+        restoreLogs(snapshot);
+        return;
+      }
+    }
+    saveCache();
+  }
+  toast(item.title + ' 완료 취소 · 실행취소', () => restoreLogs(snapshot));
 }
 
 /* 전체 버튼 — 아직 안 된 구역만 채웁니다(다른 사람 기록은 지우지 않음) */
@@ -1212,7 +1293,8 @@ async function fillMethod(item, method) {
   if (!state.worker) { needWorker(); return; }
   const st = zoneStats(item);
   const missing = st.zones.filter(z => !st.cells[cellKey(z, method)]);
-  if (!missing.length) { toast('이미 ' + method + ' 모두 기록돼 있습니다'); return; }
+  /* 이미 모두 채워져 있으면 다시 누를 때 전체 해제 */
+  if (!missing.length) { await clearMethod(item, method); return; }
   const created = [];
   state.pending++; renderStatus();
   for (const z of missing) {
