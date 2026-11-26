@@ -1181,7 +1181,7 @@ async function markCell(item, zone, method, extra) {
 async function clearCell(item, zone, method) {
   const snapshot = await clearCells(item, [{ zone, method }]);
   if (!snapshot) return;
-  toast(zone + ' ' + method + ' 해제 · 실행취소', () => restoreLogs(snapshot));
+  toast(zone + ' ' + method + ' 해제', () => restoreLogs(snapshot));
 }
 
 /* 방식 전체 해제 (전체 버튼을 다시 누를 때) */
@@ -1191,7 +1191,7 @@ async function clearMethod(item, method) {
   if (!pairs.length) { toast(method + ' 기록이 없습니다'); return; }
   const snapshot = await clearCells(item, pairs);
   if (!snapshot) return;
-  toast(method + ' ' + pairs.length + '곳 해제 · 실행취소', () => restoreLogs(snapshot));
+  toast(method + ' ' + pairs.length + '곳 해제', () => restoreLogs(snapshot));
 }
 
 /* 오늘 기록에서 해당 구역·방식 칸들만 빼고, 남는 칸이 없으면 그 기록을 지웁니다.
@@ -1285,7 +1285,7 @@ async function undoItem(item) {
     }
     saveCache();
   }
-  toast(item.title + ' 완료 취소 · 실행취소', () => restoreLogs(snapshot));
+  toast(item.title + ' 완료 취소', () => restoreLogs(snapshot));
 }
 
 /* 전체 버튼 — 아직 안 된 구역만 채웁니다(다른 사람 기록은 지우지 않음) */
