@@ -102,7 +102,8 @@ input,select,textarea{font-family:inherit;font-size:16px}
 .chip.add{background:transparent;border:1px dashed rgba(255,255,255,.35);color:rgba(255,255,255,.75)}
 
 /* ---------- scroll body ---------- */
-.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px calc(26px + env(safe-area-inset-bottom))}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px calc(36px + env(safe-area-inset-bottom))}
+.scroll[hidden]{display:none}
 .section-head{display:flex;align-items:center;justify-content:space-between;margin:16px 2px 8px}
 .section-title{font-size:13px;font-weight:800;color:var(--ink)}
 .section-title .cnt{color:var(--ink-3);font-weight:700;font-size:11.5px;margin-left:5px}
@@ -227,6 +228,70 @@ input,select,textarea{font-family:inherit;font-size:16px}
 /* empty */
 .empty{padding:26px 16px;text-align:center;color:var(--ink-3);font-size:12.5px;line-height:1.6}
 
+/* ---------- bottom tab bar ---------- */
+.tabbar{
+  flex:none;display:flex;gap:6px;padding:7px 10px calc(7px + env(safe-area-inset-bottom));
+  background:rgba(251,253,251,.96);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-top:1px solid var(--line);box-shadow:0 -6px 18px rgba(8,25,17,.07);z-index:6;
+}
+.tabbar button{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  padding:7px 6px;border-radius:13px;font-size:11px;font-weight:800;color:var(--ink-3);line-height:1.1;
+}
+.tabbar button .ico{font-size:16px;line-height:1;font-style:normal}
+.tabbar button.sel{background:var(--green-900);color:#fff;box-shadow:0 4px 14px rgba(8,37,26,.22)}
+
+/* ---------- calendar ---------- */
+.cal-top{display:grid;grid-template-columns:34px 1fr 34px auto;align-items:center;gap:6px;margin:2px 0 10px}
+.cal-nav{width:34px;height:34px;border-radius:11px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-size:18px;font-weight:800;color:var(--ink-2);line-height:1;padding:0 0 2px}
+.cal-nav:active{background:#eef2ef}
+.cal-title{text-align:center;font-size:16px;font-weight:900;letter-spacing:-0.02em}
+.cal-today-btn{font-size:11.5px;font-weight:800;padding:8px 10px;border-radius:10px;background:var(--mint-50);color:var(--green-700);border:1px solid #d8e9df;white-space:nowrap}
+.cal-today-btn.on{background:var(--green-900);border-color:var(--green-900);color:#fff}
+.cal-card{padding:9px 7px 11px}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:3px}
+.cal-dow span{text-align:center;font-size:10.5px;font-weight:800;color:var(--ink-3)}
+.cal-dow span.sun{color:var(--danger)}
+.cal-dow span.sat{color:var(--blue)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.day{position:relative;height:54px;border-radius:11px;border:1px solid transparent;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:6px 0 4px;gap:2px}
+.day .dn{font-size:13px;font-weight:800;line-height:1;color:var(--ink)}
+.day.sun .dn{color:var(--danger)}
+.day.sat .dn{color:var(--blue)}
+.day.out{opacity:.55}
+.day.today{background:var(--mint-50);border-color:#bcdccb}
+.day.sel{background:var(--green-900);border-color:var(--green-900);box-shadow:0 4px 14px rgba(8,37,26,.2);opacity:1}
+.day.sel .dn{color:#fff}
+.day .mk{display:flex;align-items:center;justify-content:center;height:15px;margin-top:2px}
+.day .cnt{font-size:9px;font-weight:900;line-height:14px;min-width:15px;padding:0 4px;border-radius:7px;background:var(--mint-100);color:var(--green-700)}
+.day.sel .cnt{background:rgba(255,255,255,.22);color:#fff}
+.day:active{transform:scale(.94)}
+.cal-head2{display:flex;align-items:center;gap:7px;margin:16px 2px 8px;flex-wrap:wrap}
+.cal-date2{font-size:14.5px;font-weight:900;letter-spacing:-0.02em}
+.cal-count2{font-size:11px;font-weight:800;color:var(--green-700);background:var(--mint-50);border:1px solid #d8e9df;padding:3px 8px;border-radius:8px}
+.cal-count2.zero{color:var(--ink-3);background:#f2f5f3;border-color:#e6ebe7}
+.sum-card{padding:11px 13px 12px}
+.sum-head{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--ink)}
+.sum-head .n{color:var(--ink-3);font-weight:700;font-size:11px}
+.sum-head .b{margin-left:auto;font-size:11px;font-weight:800;color:var(--green-700)}
+.sum-row{margin-top:8px;display:flex;flex-wrap:wrap;gap:5px}
+.sum-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 8px;border-radius:8px;background:#fbeceb;border:1px solid #f6dcd8;color:#a8604f}
+.sum-chip.done{background:var(--mint-50);border-color:#d5e9dd;color:var(--green-700)}
+.sum-chip.part{background:var(--amber-bg);border-color:#f2dfc6;color:var(--amber)}
+.rec-list{padding:2px 0}
+.rec{padding:10px 13px;border-bottom:1px dashed var(--line)}
+.rec:last-child{border-bottom:0}
+.rec-top{display:flex;align-items:center;gap:7px}
+.rec-title{flex:1;min-width:0;font-size:13.5px;font-weight:800;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.rec-time{font-size:11px;font-weight:800;color:var(--ink-3);white-space:nowrap}
+.rec-meta{font-size:11.5px;color:var(--ink-3);margin-top:4px;line-height:1.5}
+.rec-meta b{color:var(--ink-2);font-weight:800}
+.zl{margin-top:5px;display:flex;flex-direction:column;gap:3px}
+.zl-row{display:flex;gap:6px;font-size:11.5px;line-height:1.45}
+.zl-z{flex:none;min-width:72px;font-weight:800;color:var(--ink-2)}
+.zl-m{flex:1;color:var(--ink-3)}
+.zl-m b{color:var(--ink-2);font-weight:800}
+
 /* ---------- sheets ---------- */
 .backdrop{position:fixed;inset:0;background:rgba(8,25,17,.42);opacity:0;pointer-events:none;transition:opacity .22s;z-index:55}
 .backdrop.on{opacity:1;pointer-events:auto}
@@ -287,7 +352,7 @@ textarea.input{min-height:64px;resize:vertical;line-height:1.5}
 
 /* toast */
 .toast{
-  position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translate(-50%,20px);
+  position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translate(-50%,20px);
   background:#12261c;color:#fff;padding:11px 16px;border-radius:12px;font-size:12.5px;font-weight:700;
   display:flex;align-items:center;gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.3);
   opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:70;max-width:92%;
@@ -332,6 +397,28 @@ textarea.input{min-height:64px;resize:vertical;line-height:1.5}
     <section class="card" id="recent"></section>
     <div class="hint" id="footHint"></div>
   </main>
+
+  <main class="scroll" id="mainCal" hidden>
+    <div class="cal-top">
+      <button class="cal-nav" id="calPrev" aria-label="이전 달">&#8249;</button>
+      <div class="cal-title" id="calTitle">2026년 11월</div>
+      <button class="cal-nav" id="calNext" aria-label="다음 달">&#8250;</button>
+      <button class="cal-today-btn" id="calToday">오늘</button>
+    </div>
+    <section class="card cal-card">
+      <div class="cal-dow">
+        <span class="sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="sat">토</span>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </section>
+    <div id="calDetail"></div>
+    <div class="hint">날짜를 누르면 그날 완료한 청소 내역이 아래에 표시됩니다. 완료한 날은 날짜 아래 숫자(건수)로 표시됩니다.</div>
+  </main>
+
+  <nav class="tabbar" id="tabbar">
+    <button data-view="check" class="sel"><i class="ico">&#10003;</i>청소 체크</button>
+    <button data-view="cal"><i class="ico">&#128197;</i>청소 달력</button>
+  </nav>
 </div>
 
 <div class="backdrop" id="backdrop"></div>
@@ -440,7 +527,7 @@ function relTime(ts) {
 function saveCache() {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify({
-      items: state.items, logs: state.logs, staff: state.staff, at: Date.now()
+      items: state.items, logs: state.logs.slice(0, 2000), staff: state.staff, at: Date.now()
     }));
   } catch (e) {}
 }
@@ -757,6 +844,7 @@ function render() {
     : state.worker ? '위에서 지금 체크하는 사람을 고른 뒤, 항목의 완료 버튼을 누르면 바로 기록됩니다.'
     : '먼저 상단에서 "지금 체크하는 사람"을 골라 주세요.';
   $('#footHint').textContent = hint;
+  if (state.view === 'cal') renderCalendar();
 }
 
 function renderStatus() {
@@ -1632,6 +1720,302 @@ function openItemForm(item) {
     }
   };
   openSheet(item ? '항목 수정' : '항목 추가', '주기와 세부 체크 옵션을 정할 수 있습니다', body, [cancel, save]);
+}
+
+/* =========================================================
+   하단 탭 · 청소 달력
+   ========================================================= */
+state.view = 'check';
+state.calMonth = todayKey().slice(0, 7);
+state.calSel = todayKey();
+const loadedMonths = new Set();
+
+function keyMonth(key) { return String(key).slice(0, 7); }
+function monthTitle(m) {
+  const p = m.split('-');
+  return p[0] + '년 ' + Number(p[1]) + '월';
+}
+function addMonths(m, n) {
+  const p = m.split('-').map(Number);
+  return new Date(Date.UTC(p[0], p[1] - 1 + n, 1)).toISOString().slice(0, 7);
+}
+function monthBounds(m) {
+  return { start: m + '-01T00:00:00+09:00', end: addMonths(m, 1) + '-01T00:00:00+09:00' };
+}
+function logsOn(key) {
+  return state.logs.filter(l => kstKey(l.done_at) === key);
+}
+
+/* 탭 전환 */
+function setView(v) {
+  state.view = v;
+  $('#main').hidden = v !== 'check';
+  $('#mainCal').hidden = v !== 'cal';
+  Array.prototype.forEach.call(document.querySelectorAll('#tabbar button'), b => {
+    b.classList.toggle('sel', b.getAttribute('data-view') === v);
+  });
+  const chips = document.querySelector('.chips-wrap');
+  if (chips) chips.style.display = v === 'cal' ? 'none' : '';
+  const bt = document.querySelector('.brand-title');
+  if (bt) bt.textContent = v === 'cal' ? '청소 달력' : '연습장 청소 체크';
+  if (v === 'cal') {
+    state.calSel = todayKey();
+    state.calMonth = keyMonth(todayKey());
+    renderCalendar();
+    ensureMonth(state.calMonth);
+  }
+}
+Array.prototype.forEach.call(document.querySelectorAll('#tabbar button'), b => {
+  b.onclick = () => setView(b.getAttribute('data-view'));
+});
+
+/* 그 달 기록을 DB에서 한 번 더 읽어 옵니다 (과거 달도 빠짐없이) */
+async function ensureMonth(m) {
+  if (!sb || loadedMonths.has(m)) return;
+  loadedMonths.add(m);
+  try {
+    const bnd = monthBounds(m);
+    const { data, error } = await sb.from('cleaning_logs').select('*')
+      .gte('done_at', bnd.start).lt('done_at', bnd.end)
+      .order('done_at', { ascending: true }).limit(1000);
+    if (error) throw error;
+    let added = 0;
+    (data || []).forEach(row => {
+      if (!state.logs.some(l => l.id === row.id)) { state.logs.push(row); added++; }
+    });
+    if (added) {
+      state.logs.sort((x, y) => new Date(y.done_at) - new Date(x.done_at));
+      saveCache();
+    }
+    renderCalendar();
+  } catch (e) {
+    console.warn('month load failed', m, e);
+    loadedMonths.delete(m);
+  }
+}
+
+function gotoMonth(m) {
+  const t = todayKey();
+  state.calMonth = m;
+  if (keyMonth(t) === m) {
+    state.calSel = t;
+  } else {
+    const y = Number(m.slice(0, 4)), mo = Number(m.slice(5, 7));
+    const dim = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+    const want = Math.min(Number(String(state.calSel).slice(8, 10)) || 1, dim);
+    state.calSel = m + '-' + String(want).padStart(2, '0');
+  }
+  ensureMonth(m);
+  renderCalendar();
+}
+
+function selectDay(key) {
+  state.calSel = key;
+  const m = keyMonth(key);
+  if (m !== state.calMonth) { state.calMonth = m; ensureMonth(m); }
+  renderCalendar();
+}
+
+if ($('#calPrev')) $('#calPrev').onclick = () => gotoMonth(addMonths(state.calMonth, -1));
+if ($('#calNext')) $('#calNext').onclick = () => gotoMonth(addMonths(state.calMonth, 1));
+if ($('#calToday')) $('#calToday').onclick = () => {
+  state.calMonth = keyMonth(todayKey());
+  state.calSel = todayKey();
+  ensureMonth(state.calMonth);
+  renderCalendar();
+};
+
+function renderCalendar() {
+  const grid = $('#calGrid');
+  if (!grid) return;
+  const tKey = todayKey();
+  $('#calTitle').textContent = monthTitle(state.calMonth);
+  $('#calToday').classList.toggle('on', state.calSel === tKey);
+
+  const counts = {};
+  state.logs.forEach(l => {
+    const k = kstKey(l.done_at);
+    counts[k] = (counts[k] || 0) + 1;
+  });
+
+  const y = Number(state.calMonth.slice(0, 4)), mo = Number(state.calMonth.slice(5, 7));
+  const firstDow = new Date(Date.UTC(y, mo - 1, 1)).getUTCDay();
+  const daysInMonth = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+  const cells = Math.ceil((firstDow + daysInMonth) / 7) * 7;
+
+  grid.innerHTML = '';
+  for (let i = 0; i < cells; i++) {
+    const dayNum = i - firstDow + 1;
+    const key = addDays(state.calMonth + '-01', dayNum - 1);
+    const d = new Date(key + 'T00:00:00Z');
+    const dow = d.getUTCDay();
+    const inMonth = dayNum >= 1 && dayNum <= daysInMonth;
+    const n = counts[key] || 0;
+    const b = el('button', 'day' + (inMonth ? '' : ' out') + (dow === 0 ? ' sun' : dow === 6 ? ' sat' : '') +
+      (key === tKey ? ' today' : '') + (key === state.calSel ? ' sel' : ''));
+    b.setAttribute('aria-label', (d.getUTCMonth() + 1) + '월 ' + d.getUTCDate() + '일' + (n ? ' · ' + n + '건 완료' : ' · 기록 없음'));
+    if (key === state.calSel) b.setAttribute('aria-current', 'date');
+    b.innerHTML = '<span class="dn">' + d.getUTCDate() + '</span>' +
+      '<span class="mk">' + (n ? '<span class="cnt">' + (n > 99 ? '99+' : n) + '</span>' : '') + '</span>';
+    b.onclick = () => selectDay(key);
+    grid.appendChild(b);
+  }
+  renderCalDetail();
+}
+
+/* 같은 날 · 같은 항목 기록을 한 덩어리로 묶습니다 */
+function groupDayLogs(logs) {
+  const groups = [], byItem = {};
+  logs.forEach(l => {
+    let g = byItem[l.item_id];
+    if (!g) {
+      g = byItem[l.item_id] = { item_id: l.item_id, first: l.done_at, last: l.done_at, staff: [], zones: {}, memo: null, note: '', shutdown: false, n: 0 };
+      groups.push(g);
+    }
+    g.n++;
+    if (new Date(l.done_at) < new Date(g.first)) g.first = l.done_at;
+    if (new Date(l.done_at) > new Date(g.last)) g.last = l.done_at;
+    if (g.staff.indexOf(l.staff_name) < 0) g.staff.push(l.staff_name);
+    const zs = l.detail && l.detail.zones;
+    if (zs && typeof zs === 'object') {
+      Object.keys(zs).forEach(z => {
+        const cur = g.zones[z] || (g.zones[z] = {});
+        (Array.isArray(zs[z]) ? zs[z] : []).forEach(m => {
+          if (!cur[m]) cur[m] = { by: [], at: [] };
+          if (cur[m].by.indexOf(l.staff_name) < 0) cur[m].by.push(l.staff_name);
+          cur[m].at.push(l.done_at);
+        });
+      });
+    }
+    if (l.memo && !g.memo) g.memo = l.memo;
+    if (l.detail && l.detail.note && !g.note) g.note = l.detail.note;
+    if (l.detail && l.detail.shutdown) g.shutdown = true;
+  });
+  return groups;
+}
+
+function renderCalDetail() {
+  const wrap = $('#calDetail');
+  if (!wrap) return;
+  const key = state.calSel;
+  const tKey = todayKey();
+  const d = new Date(key + 'T00:00:00Z');
+  const label = (d.getUTCMonth() + 1) + '월 ' + d.getUTCDate() + '일 (' + DOW[d.getUTCDay()] + ')';
+  const logs = logsOn(key).sort((a, b) => new Date(a.done_at) - new Date(b.done_at));
+
+  wrap.innerHTML = '';
+  wrap.appendChild(el('div', 'cal-head2',
+    '<div class="cal-date2">' + esc(label) + '</div>' +
+    '<div class="cal-count2' + (logs.length ? '' : ' zero') + '">' +
+      (logs.length ? '총 ' + logs.length + '건 완료' : '기록 없음') +
+    '</div>'));
+
+  if (!logs.length) {
+    let msg, sub;
+    if (key > tKey) { msg = '아직 오지 않은 날짜예요.'; sub = '청소를 완료하면 그날 기록이 여기에 쌓입니다.'; }
+    else if (key === tKey) { msg = '오늘은 아직 완료된 청소 기록이 없어요.'; sub = '체크 탭에서 완료를 누르면 여기에 시간순으로 쌓입니다.'; }
+    else { msg = '이 날은 완료된 청소 기록이 없어요.'; sub = '다른 날짜를 누르면 그날 내역을 볼 수 있습니다.'; }
+    wrap.appendChild(el('section', 'card empty', esc(msg) + '<br><span style="font-size:11px">' + esc(sub) + '</span>'));
+    return;
+  }
+
+  /* 매일 항목 중 그날 완료 / 안 한 것 요약 */
+  const daily = activeItems().filter(i => (i.interval_days || 1) === 1);
+  if (daily.length) {
+    const res = daily.map(i => {
+      const ls = logs.filter(l => l.item_id === i.id);
+      if (!ls.length) return { item: i, st: 'none' };
+      if (isZoneItem(i)) {
+        const cells = {};
+        ls.forEach(l => {
+          const zs = l.detail && l.detail.zones;
+          if (zs && typeof zs === 'object') Object.keys(zs).forEach(z => {
+            (Array.isArray(zs[z]) ? zs[z] : []).forEach(m => { cells[z + '::' + m] = 1; });
+          });
+        });
+        const zones = zoneLabels(i), methods = methodLabels(i).slice(0, 2);
+        const dz = zones.filter(z => methods.some(m => cells[z + '::' + m])).length;
+        return { item: i, st: (zones.length && dz === zones.length) ? 'done' : 'part', dz, total: zones.length };
+      }
+      return { item: i, st: 'done' };
+    });
+    const doneN = res.filter(r => r.st === 'done').length;
+    const partN = res.filter(r => r.st === 'part').length;
+    const card = el('section', 'card sum-card');
+    card.innerHTML = '<div class="sum-head">매일 항목 완료 ' +
+      '<span class="n">' + doneN + '/' + daily.length + (partN ? ' · 일부 ' + partN : '') + '</span>' +
+      '<span class="b">' + Math.round(doneN / daily.length * 100) + '%</span></div>';
+    const row = el('div', 'sum-row');
+    res.forEach(r => {
+      const cls = r.st === 'done' ? ' done' : r.st === 'part' ? ' part' : '';
+      const mark = r.st === 'done' ? '✓ ' : r.st === 'part' ? '◐ ' : '○ ';
+      const extra = r.st === 'part' ? ' ' + r.dz + '/' + r.total : '';
+      row.appendChild(el('span', 'sum-chip' + cls, mark + esc(r.item.title) + extra));
+    });
+    card.appendChild(row);
+
+    /* 그날 완료한 주기 항목(2·4·6개월) */
+    const periodic = groupDayLogs(logs).filter(g => {
+      const it = itemById(g.item_id);
+      return it && (it.interval_days || 1) > 1;
+    });
+    if (periodic.length) {
+      const head2 = el('div', 'sum-head', '주기 항목 <span class="n">' + periodic.length + '개 완료</span>');
+      head2.style.marginTop = '10px';
+      card.appendChild(head2);
+      const row2 = el('div', 'sum-row');
+      periodic.forEach(g => {
+        const it = itemById(g.item_id);
+        row2.appendChild(el('span', 'sum-chip done', '✓ ' + esc(it.title) + ' ' + esc(it.category)));
+      });
+      card.appendChild(row2);
+    }
+    wrap.appendChild(card);
+  }
+
+  /* 그날 완료한 항목 내역 (시간순) */
+  const groups = groupDayLogs(logs);
+  const listCard = el('section', 'card rec-list');
+  groups.forEach(g => {
+    const item = itemById(g.item_id);
+    const row = el('div', 'rec');
+    const timeTxt = g.n === 1 || kstHM(g.first) === kstHM(g.last)
+      ? kstHM(g.first) + (g.n > 1 ? ' 외 ' + (g.n - 1) + '건' : '')
+      : kstHM(g.first) + '~' + kstHM(g.last);
+    row.innerHTML =
+      '<div class="rec-top">' +
+        '<div class="rec-title">' + esc(item ? item.title : '(삭제된 항목)') +
+          (item && item.category ? '<span class="cat ' + catClass(item.category) + '">' + esc(item.category) + '</span>' : '') +
+        '</div>' +
+        '<div class="rec-time">' + esc(timeTxt) + '</div>' +
+      '</div>';
+    const bits = [];
+    const names = g.staff.map(shortName);
+    if (names.length) bits.push('<b>' + esc(names.join(' · ')) + '</b>');
+    if (!Object.keys(g.zones).length) {
+      if (g.shutdown) bits.push('마감 완료');
+      if (g.note) bits.push(esc(g.note));
+    }
+    if (g.memo) bits.push('메모 · ' + esc(g.memo));
+    if (bits.length) row.appendChild(el('div', 'rec-meta', bits.join(' · ')));
+    const zkeys = Object.keys(g.zones);
+    if (zkeys.length) {
+      const zl = el('div', 'zl');
+      zkeys.forEach(z => {
+        const methods = Object.keys(g.zones[z]);
+        const txt = methods.map(m => {
+          const c = g.zones[z][m];
+          const by = c.by.map(shortName).join('·');
+          const at = kstHM(c.at[c.at.length - 1]);
+          return '<b>' + esc(m) + '</b> ' + esc(by) + ' ' + esc(at);
+        }).join(' · ');
+        zl.appendChild(el('div', 'zl-row', '<div class="zl-z">' + esc(z) + '</div><div class="zl-m">' + txt + '</div>'));
+      });
+      row.appendChild(zl);
+    }
+    listCard.appendChild(row);
+  });
+  wrap.appendChild(listCard);
 }
 
 /* ---------- realtime ---------- */
