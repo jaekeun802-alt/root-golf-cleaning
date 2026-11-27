@@ -74,10 +74,11 @@ insert into public.cleaning_items (id, title, category, interval_days, options_j
   ('shutdown',   '노래 · 에어컨 · 히터 · 포스기 끄기',  '매일',   1,   '{"shutdown":true}', 7),
   ('fan',        '선풍기 청소',                        '2개월', 60,  null, 8),
   ('airpurifier','공기청정기 필터 청소',               '2개월', 60,  null, 9),
-  ('computer',   '컴퓨터 청소',                        '4개월', 120, null, 10),
-  ('teeup',      '티업기계 안 청소',                   '4개월', 120, null, 11),
-  ('acfilter',   '에어컨 필터 청소',                   '6개월', 180, null, 12),
-  ('yogibo',     '요기보 이불빨래',                    '6개월', 180, null, 13)
+  ('projector',  '빔프로젝터 필터 청소',               '2개월', 60,  null, 10),
+  ('computer',   '컴퓨터 청소',                        '4개월', 120, null, 11),
+  ('teeup',      '티업기계 안 청소',                   '4개월', 120, null, 12),
+  ('acfilter',   '에어컨 필터 청소',                   '6개월', 180, null, 13),
+  ('yogibo',     '요기보 이불빨래',                    '6개월', 180, null, 14)
 on conflict (id) do nothing;
 
 insert into public.cleaning_staff (id, name, role, sort_order) values
